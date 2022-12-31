@@ -59,6 +59,10 @@ def hit(opbombboard, y, x, ourrepboard):
         opbombboard[y][x] = 2
 
 def checkhit(opbombboard, y, x):
+    if not 0 <= y <= 9:
+        return False
+    if not 0 <= x <= 9:
+        return False
     if opbombboard[y][x] in [2, 3]:
         return False
     return True
@@ -95,36 +99,21 @@ def checkboard(reportboard):
     return False
 
 '''
-Setup
-
-player set ships
-for i in shipsizes :
-print (where do you want your i ship)
-input y
-input x
-input direction
-
-robo set ships
-
-
-Game loop
-
-forever
-    player bomb
-        report recieve
-    if 1 not in robo
-        print("YOU HAVE WON THE WAR")
-        break
-    robo bomb
-        bombboard recieve
-    if 1 not in player
-        print("YOU HAVE LOST THE WAR")
-        break
-
 
 todo:
 make last hit diff emoji
 change variable name (rep ==> report)
+multiplayer
+
+make robo smarter
+    if y, x == 2
+        quad = random.choice([-1, 1])
+        axis = random.choice([x, y])
+        axis += 1
+        checkhit
+        hit
+what to do if all spots are already hit?
+
 '''
 
 bombboard1 = newboard()
@@ -132,6 +121,8 @@ bombboard2 = newboard()
 reportboard1 = newboard()
 reportboard2 = newboard()
 
+lastxhit = None
+lastyhit = None
 
 shipsizes = [2, 3, 3, 4, 5]
 
@@ -220,6 +211,7 @@ while True:
     hit(bombboard1, y, x, reportboard2)
     printboard(bombboard1, "BOMBING REPORT")
 
+    # checking player's bombing
     if not checkboard(reportboard2):
         print()
         print("YOU HAVE WON THE WAR")
@@ -227,16 +219,40 @@ while True:
     input()
 
     # robo bombing
+
+    # checking last ship hit position
+    if bombboard2[lastyhit][lastxhit] == 2:
+        # making a list of spaces around (list it all)
+        randposition = [
+            [lastyhit-1, lastxhit],
+            [lastyhit+1, lastxhit],
+            [lastyhit, lastxhit-1],
+            [lastyhit, lastxhit+1],
+        ]
+        random.shuffle(randposition)
+        # checking each location
+        for yrobo, xrobo in randposition:
+            if not checkhit(bombboard, yrobo, xrobo):
+                continue
+            break
+
     while True:
-        y = randint(0, 9)
-        x = randint(0, 9)
-        if not checkhit(bombboard2, y, x):
+        yrobo = randint(0, 9)
+        xrobo = randint(0, 9)
+
+        if not checkhit(bombboard2, yrobo, xrobo):
             continue
         break
 
-    hit(bombboard2, y, x, reportboard1)
+    hit(bombboard2, yrobo, xrobo, reportboard1)
     printboard(reportboard1, "OUR FLEET STATUS")
 
+    # add last positions
+    if bombboard2[yrobo][xrobo] == 2:
+        lastyhit = yrobo
+        lastxhit = xrobo
+
+    # checking robo's bombing
     if not checkboard(reportboard1):
         print()
         print("YOU HAVE LOST THE WAR")
