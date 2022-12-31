@@ -80,15 +80,26 @@ def printboard(board):
                 print("○", end = " ")
         print()
     # adding x-axis
-    print("  1 2 3 4 5 6 7 8 9 10")
+    print("   1 2 3 4 5 6 7 8 9 10")
     print()
+
+def checkboard(reportboard):
+# True = game is ongoing
+# False = game is finished
+    for row in reportboard:
+        if 1 in row:
+            return True
+    return False
 
 '''
 Setup
 
 player set ships
+for i in shipsizes :
+print (where do you want your i ship)
 input y
 input x
+input direction
 
 robo set ships
 
@@ -110,6 +121,8 @@ forever
 
 todo:
 make last hit diff emoji
+change variable name (rep ==> report)
+change printboard so it prints with text
 '''
 
 bombboard1 = newboard()
@@ -120,15 +133,15 @@ reportboard2 = newboard()
 
 shipsizes = [2, 3, 3, 4, 5]
 
-# creating player board
-for shipsize in shipsizes:
-    while True:
-        y = randint(0,7)
-        x = randint(0,7)
-        shipdirection = randint(0,1)
-        if checkship(reportboard1, y, x, shipsize, shipdirection):
-            break
-    addship(reportboard1, y, x, shipsize, shipdirection)
+# # creating player board
+# for shipsize in shipsizes:
+    # while True:
+        # y = randint(0,7)
+        # x = randint(0,7)
+        # shipdirection = randint(0,1)
+        # if checkship(reportboard1, y, x, shipsize, shipdirection):
+            # break
+    # addship(reportboard1, y, x, shipsize, shipdirection)
 
 
 # creating robo board
@@ -141,9 +154,44 @@ for shipsize in shipsizes:
             break
     addship(reportboard2, y, x, shipsize, shipdirection)
 
+# player setting ships
+for length in shipsizes:
+    print(f"WHERE DO YOU WANT YOUR LENGTH {length} SHIP?")
+    printboard(reportboard1)
+    #taking input
+    while True:
+        try:
+            # checking y and x
+            y = int(input("Y POSITION:")) - 1
+            if not 0 <= y <= 9:
+                print("DAmn bro")
+                continue
+            x = int(input("X POSITION:")) - 1
+            if not 0 <= x <= 9:
+                print("DAmn bro")
+                continue
+            # checking direction
+            direction = int(input("DIRECTION (0 = horizontal, 1 = vertical):"))
+            if direction not in [0, 1]:
+                print("DAmn bro")
+                continue
+        #checking other random stuff
+        except ValueError:
+            print("DAmn bro")
+            continue
+        # checking placement
+        if not checkship(reportboard1, y, x, length, direction):
+            print("DAmn bro")
+            continue
+        break
+    # adding ship
+    addship(reportboard1, y, x, length, direction)
+print("OUR FLEET STATUS")
+printboard(reportboard1)
 
 # game loop
 while True:
+
     print()
     print("WHERE DO YOU WANT TO BOMB?")
     printboard(bombboard1)
@@ -175,6 +223,10 @@ while True:
     print()
     print("BOMBING REPORT")
     printboard(bombboard1)
+    if not checkboard(reportboard2):
+        print()
+        print("YOU HAVE WON THE WAR")
+        break
     input()
 
     # robo bombing
@@ -190,4 +242,7 @@ while True:
     print()
     print("OUR FLEET STATUS")
     printboard(reportboard1)
+    if not checkboard(reportboard1):
+        print("YOU HAVE LOST THE WAR")
+        break
     input()
