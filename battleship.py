@@ -63,7 +63,10 @@ def checkhit(opbombboard, y, x):
         return False
     return True
 
-def printboard(board):
+def printboard(board, phrase=None):
+    print()
+    if phrase is not None:
+        print(phrase)
     # adding y-axis numbers
     for num, List in enumerate(board):
         # formating y-axis
@@ -122,7 +125,6 @@ forever
 todo:
 make last hit diff emoji
 change variable name (rep ==> report)
-change printboard so it prints with text
 '''
 
 bombboard1 = newboard()
@@ -156,8 +158,7 @@ for shipsize in shipsizes:
 
 # player setting ships
 for length in shipsizes:
-    print(f"WHERE DO YOU WANT YOUR LENGTH {length} SHIP?")
-    printboard(reportboard1)
+    printboard(reportboard1, f"WHERE DO YOU WANT YOUR LENGTH {length} SHIP?")
     #taking input
     while True:
         try:
@@ -186,15 +187,13 @@ for length in shipsizes:
         break
     # adding ship
     addship(reportboard1, y, x, length, direction)
-print("OUR FLEET STATUS")
-printboard(reportboard1)
+
+printboard(reportboard1, "OUR FLEET STATUS")
 
 # game loop
 while True:
 
-    print()
-    print("WHERE DO YOU WANT TO BOMB?")
-    printboard(bombboard1)
+    printboard(bombboard1, "WHERE DO YOU WANT TO BOMB?")
 
     # player bombing
     while True:
@@ -219,10 +218,8 @@ while True:
         break
 
     hit(bombboard1, y, x, reportboard2)
+    printboard(bombboard1, "BOMBING REPORT")
 
-    print()
-    print("BOMBING REPORT")
-    printboard(bombboard1)
     if not checkboard(reportboard2):
         print()
         print("YOU HAVE WON THE WAR")
@@ -238,11 +235,10 @@ while True:
         break
 
     hit(bombboard2, y, x, reportboard1)
+    printboard(reportboard1, "OUR FLEET STATUS")
 
-    print()
-    print("OUR FLEET STATUS")
-    printboard(reportboard1)
     if not checkboard(reportboard1):
+        print()
         print("YOU HAVE LOST THE WAR")
         break
     input()
