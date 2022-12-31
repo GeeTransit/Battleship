@@ -64,17 +64,24 @@ def checkhit(opbombboard, y, x):
     return True
 
 def printboard(board):
-    for i in board:
-        for i in i:
-            if i == 0:
+    # adding y-axis numbers
+    for num, List in enumerate(board):
+        # formating y-axis
+        print (f'{num + 1:2}', end = " ")
+        # changing number to symbols
+        for item in List:
+            if item == 0:
                 print("•", end = " ")
-            if i == 1:
+            if item == 1:
                 print("■", end = " ")
-            if i == 2:
+            if item == 2:
                 print("▣", end = " ")
-            if i == 3:
+            if item == 3:
                 print("○", end = " ")
         print()
+    # adding x-axis
+    print("  1 2 3 4 5 6 7 8 9 10")
+    print()
 
 '''
 Setup
@@ -146,9 +153,11 @@ while True:
         try:
             y = int(input("Y POSITION OF BOMB (1-10): ")) - 1
             if not 0 <= y <= 9:
+                print("DAmn bro")
                 continue
             x = int(input("X POSITION OF BOMB (1-10): ")) - 1
             if not 0 <= x <= 9:
+                print("DAmn bro")
                 continue
         except ValueError:
             print("DAmn bro")
