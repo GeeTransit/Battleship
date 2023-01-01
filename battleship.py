@@ -1,4 +1,4 @@
-from random import randint
+from random import randint, shuffle
 from pprint import pp
 
 def newboard():
@@ -88,7 +88,6 @@ def printboard(board, phrase=None):
         print()
     # adding x-axis
     print("   1 2 3 4 5 6 7 8 9 10")
-    print()
 
 def checkboard(reportboard):
 # True = game is ongoing
@@ -126,15 +125,7 @@ lastyhit = None
 
 shipsizes = [2, 3, 3, 4, 5]
 
-# # creating player board
-# for shipsize in shipsizes:
-    # while True:
-        # y = randint(0,7)
-        # x = randint(0,7)
-        # shipdirection = randint(0,1)
-        # if checkship(reportboard1, y, x, shipsize, shipdirection):
-            # break
-    # addship(reportboard1, y, x, shipsize, shipdirection)
+potentialshipspace = 0
 
 
 # creating robo board
@@ -147,37 +138,59 @@ for shipsize in shipsizes:
             break
     addship(reportboard2, y, x, shipsize, shipdirection)
 
+# creating player's board
+
+while True:
+    boardtype = input("Do you want a random board (yes or no)? ")
+    if boardtype not in ["yes", "no"]:
+        print("DAmn  bro")
+        continue
+    break
+
+# random player board
+if boardtype == "yes":
+    for shipsize in shipsizes:
+        while True:
+            y = randint(0,7)
+            x = randint(0,7)
+            shipdirection = randint(0,1)
+            if checkship(reportboard1, y, x, shipsize, shipdirection):
+                break
+        addship(reportboard1, y, x, shipsize, shipdirection)
+
 # player setting ships
-for length in shipsizes:
-    printboard(reportboard1, f"WHERE DO YOU WANT YOUR LENGTH {length} SHIP?")
-    #taking input
-    while True:
-        try:
-            # checking y and x
-            y = int(input("Y POSITION:")) - 1
-            if not 0 <= y <= 9:
+if boardtype == "no":
+    for length in shipsizes:
+        printboard(reportboard1, f"WHERE DO YOU WANT YOUR LENGTH {length} SHIP?")
+        print()
+        #taking input
+        while True:
+            try:
+                # checking y and x
+                y = int(input("Y POSITION:")) - 1
+                if not 0 <= y <= 9:
+                    print("DAmn bro")
+                    continue
+                x = int(input("X POSITION:")) - 1
+                if not 0 <= x <= 9:
+                    print("DAmn bro")
+                    continue
+                # checking direction
+                direction = int(input("DIRECTION (0 = horizontal, 1 = vertical):"))
+                if direction not in [0, 1]:
+                    print("DAmn bro")
+                    continue
+            #checking other random stuff
+            except ValueError:
                 print("DAmn bro")
                 continue
-            x = int(input("X POSITION:")) - 1
-            if not 0 <= x <= 9:
+            # checking placement
+            if not checkship(reportboard1, y, x, length, direction):
                 print("DAmn bro")
                 continue
-            # checking direction
-            direction = int(input("DIRECTION (0 = horizontal, 1 = vertical):"))
-            if direction not in [0, 1]:
-                print("DAmn bro")
-                continue
-        #checking other random stuff
-        except ValueError:
-            print("DAmn bro")
-            continue
-        # checking placement
-        if not checkship(reportboard1, y, x, length, direction):
-            print("DAmn bro")
-            continue
-        break
-    # adding ship
-    addship(reportboard1, y, x, length, direction)
+            break
+        # adding ship
+        addship(reportboard1, y, x, length, direction)
 
 printboard(reportboard1, "OUR FLEET STATUS")
 
@@ -215,13 +228,15 @@ while True:
     if not checkboard(reportboard2):
         print()
         print("YOU HAVE WON THE WAR")
+        print()
+        printboard(reportboard1)
         break
     input()
 
     # robo bombing
 
     # checking last ship hit position
-    if bombboard2[lastyhit][lastxhit] == 2:
+    if lastyhit is not None:
         # making a list of spaces around (list it all)
         randposition = [
             [lastyhit-1, lastxhit],
@@ -229,25 +244,29 @@ while True:
             [lastyhit, lastxhit-1],
             [lastyhit, lastxhit+1],
         ]
-        random.shuffle(randposition)
+        shuffle(randposition)
         # checking each location
         for yrobo, xrobo in randposition:
-            if not checkhit(bombboard, yrobo, xrobo):
+            if not checkhit(bombboard2, yrobo, xrobo):
+                continue
+            potentialshipspace = 1
+            break
+
+    if potentialshipspace == 0:
+        while True:
+        # creates new bomb position
+            yrobo = randint(0, 9)
+            xrobo = randint(0, 9)
+
+            if not checkhit(bombboard2, yrobo, xrobo):
                 continue
             break
 
-    while True:
-        yrobo = randint(0, 9)
-        xrobo = randint(0, 9)
-
-        if not checkhit(bombboard2, yrobo, xrobo):
-            continue
-        break
-
     hit(bombboard2, yrobo, xrobo, reportboard1)
+    potentialshipspace = 0
     printboard(reportboard1, "OUR FLEET STATUS")
 
-    # add last positions
+    # add last ship hit positions
     if bombboard2[yrobo][xrobo] == 2:
         lastyhit = yrobo
         lastxhit = xrobo
@@ -256,5 +275,7 @@ while True:
     if not checkboard(reportboard1):
         print()
         print("YOU HAVE LOST THE WAR")
+        print()
+        printboard(reportboard2)
         break
     input()
