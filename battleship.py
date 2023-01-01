@@ -45,17 +45,17 @@ def checkship(board, y, x, shiplength, shipdirection):
 
     return True
 
-def hit(opbombboard, y, x, ourrepboard):
+def hit(opbombboard, y, x, ourreportboard):
     # 0 = sea
     # 1 = ship unhit
     # 2 = ship hit
     # 3 = bomb sea
-    if ourrepboard[y][x] == 0:
-        ourrepboard[y][x] = 3
+    if ourreportboard[y][x] == 0:
+        ourreportboard[y][x] = 3
         opbombboard[y][x] = 3
         return 0
-    if ourrepboard[y][x] == 1:
-        ourrepboard[y][x] = 2
+    if ourreportboard[y][x] == 1:
+        ourreportboard[y][x] = 2
         opbombboard[y][x] = 2
 
 def checkhit(opbombboard, y, x):
@@ -97,69 +97,17 @@ def checkboard(reportboard):
             return True
     return False
 
-'''
-
-todo:
-make last hit diff emoji
-change variable name (rep ==> report)
-multiplayer
-
-make robo smarter
-    if y, x == 2
-        quad = random.choice([-1, 1])
-        axis = random.choice([x, y])
-        axis += 1
-        checkhit
-        hit
-what to do if all spots are already hit?
-
-'''
-
-bombboard1 = newboard()
-bombboard2 = newboard()
-reportboard1 = newboard()
-reportboard2 = newboard()
-
-lastxhit = None
-lastyhit = None
-
-shipsizes = [2, 3, 3, 4, 5]
-
-potentialshipspace = 0
-
-
-# creating robo board
-for shipsize in shipsizes:
-    while True:
-        y = randint(0,7)
-        x = randint(0,7)
-        shipdirection = randint(0,1)
-        if checkship(reportboard2, y, x, shipsize, shipdirection):
-            break
-    addship(reportboard2, y, x, shipsize, shipdirection)
-
-# creating player's board
-
-while True:
-    boardtype = input("Do you want a random board (yes or no)? ")
-    if boardtype not in ["yes", "no"]:
-        print("DAmn  bro")
-        continue
-    break
-
-# random player board
-if boardtype == "yes":
+def randomboard(reportboard, shipsizes):
     for shipsize in shipsizes:
         while True:
-            y = randint(0,7)
-            x = randint(0,7)
+            y = randint(0,9)
+            x = randint(0,9)
             shipdirection = randint(0,1)
-            if checkship(reportboard1, y, x, shipsize, shipdirection):
+            if checkship(reportboard, y, x, shipsize, shipdirection):
                 break
-        addship(reportboard1, y, x, shipsize, shipdirection)
+        addship(reportboard, y, x, shipsize, shipdirection)
 
-# player setting ships
-if boardtype == "no":
+def customboard(reportboard, shipsizes):
     for length in shipsizes:
         printboard(reportboard1, f"WHERE DO YOU WANT YOUR LENGTH {length} SHIP?")
         print()
@@ -185,18 +133,116 @@ if boardtype == "no":
                 print("DAmn bro")
                 continue
             # checking placement
-            if not checkship(reportboard1, y, x, length, direction):
+            if not checkship(reportboard, y, x, length, direction):
                 print("DAmn bro")
                 continue
             break
         # adding ship
-        addship(reportboard1, y, x, length, direction)
+        addship(reportboard, y, x, length, direction)
+
+def switchuser(prompt):
+    for i in range(50):
+        print()
+    input(prompt)
+
+'''
+
+todo:
+make last hit diff emoji
+ship down diff icon
+- attach ship parts together
+- check if all parts are down whe ship is hit
+
+multiplayer
+
+make robo smarter!
+- continue using older ship locations
+
+more meaningful feedback messages
+'''
+
+bombboard1 = newboard()
+bombboard2 = newboard()
+reportboard1 = newboard()
+reportboard2 = newboard()
+
+lastxhit = None
+lastyhit = None
+
+shipsizes = [2, 3, 3, 4, 5]
+
+potentialshipspace = 0
+
+# setting gamemode (loner or not)
+while True:
+    print("Which gamemode?")
+    print("1. Singleplayer")
+    print("2. Multiplayer")
+    try:
+        gamemode = int(input("1 or 2?"))
+        if gamemode not in [1, 2]:
+            continue
+    except ValueError:
+        continue
+    break
+
+if gamemode == 2:
+    print("PLAYER 1 SETUP")
+    input()
+# creating player's board
+while True:
+    boardtype = input("Do you want a random board (yes or no)?\n")
+    if boardtype not in ["yes", "no"]:
+        print("DAmn  bro")
+        continue
+    break
+
+# random player board
+if boardtype == "yes":
+    randomboard(reportboard1, shipsizes)
+
+# custom player board
+if boardtype == "no":
+    customboard(reportboard1, shipsizes)
 
 printboard(reportboard1, "OUR FLEET STATUS")
+
+# creating robo board
+if gamemode == 1:
+    input()
+    randomboard(reportboard2, shipsizes)
+
+# creating player 2 board
+if gamemode == 2:
+    input("READY FOR BATTLE?")
+    switchuser("PLAYER 2 SETUP")
+
+    # creating player's board
+    while True:
+        boardtype = input("Do you want a random board (yes or no)?\n")
+        if boardtype not in ["yes", "no"]:
+            print("DAmn  bro")
+            continue
+        break
+
+    # random player board
+    if boardtype == "yes":
+        randomboard(reportboard2, shipsizes)
+
+    # player setting ships
+    if boardtype == "no":
+        customboard(reportboard2, shipsizes)
+
+    printboard(reportboard2, "OUR FLEET STATUS")
+
+    input("READY FOR BATTLE?")
+    switchuser("PLAYER 1 TURN")
+
 
 # game loop
 while True:
 
+    printboard(reportboard1, "OUR FLEET STATUS")
     printboard(bombboard1, "WHERE DO YOU WANT TO BOMB?")
 
     # player bombing
@@ -231,51 +277,93 @@ while True:
         print()
         printboard(reportboard1)
         break
-    input()
+    print()
+    input("ARE YOU WANNA NEXT TURN???")
 
     # robo bombing
+    if gamemode == 1:
+        # checking last ship hit position
+        if lastyhit is not None:
+            # making a list of spaces around (list it all)
+            randposition = [
+                [lastyhit-1, lastxhit],
+                [lastyhit+1, lastxhit],
+                [lastyhit, lastxhit-1],
+                [lastyhit, lastxhit+1],
+            ]
+            shuffle(randposition)
+            # checking each location
+            for yrobo, xrobo in randposition:
+                if not checkhit(bombboard2, yrobo, xrobo):
+                    continue
+                potentialshipspace = 1
+                break
 
-    # checking last ship hit position
-    if lastyhit is not None:
-        # making a list of spaces around (list it all)
-        randposition = [
-            [lastyhit-1, lastxhit],
-            [lastyhit+1, lastxhit],
-            [lastyhit, lastxhit-1],
-            [lastyhit, lastxhit+1],
-        ]
-        shuffle(randposition)
-        # checking each location
-        for yrobo, xrobo in randposition:
-            if not checkhit(bombboard2, yrobo, xrobo):
-                continue
-            potentialshipspace = 1
+        if potentialshipspace == 0:
+            while True:
+            # creates new bomb position
+                yrobo = randint(0, 9)
+                xrobo = randint(0, 9)
+
+                if not checkhit(bombboard2, yrobo, xrobo):
+                    continue
+                break
+
+        hit(bombboard2, yrobo, xrobo, reportboard1)
+        potentialshipspace = 0
+        printboard(reportboard1, "OUR FLEET STATUS")
+
+        # add last ship hit positions
+        if bombboard2[yrobo][xrobo] == 2:
+            lastyhit = yrobo
+            lastxhit = xrobo
+
+        # checking robo's bombing
+        if not checkboard(reportboard1):
+            printboard(reportboard2)
+            print("YOU HAVE LOST THE WAR")
+            print()
             break
+        input()
 
-    if potentialshipspace == 0:
+
+    if gamemode == 2:
+        switchuser("PLAYER 2 TURN")
+
+        printboard(reportboard1, "OUR FLEET STATUS")
+        printboard(bombboard2, "WHERE DO YOU WANT TO BOMB?")
+
+        # player bombing
         while True:
-        # creates new bomb position
-            yrobo = randint(0, 9)
-            xrobo = randint(0, 9)
+            try:
+                y = int(input("Y POSITION OF BOMB (1-10): ")) - 1
+                if not 0 <= y <= 9:
+                    print("DAmn bro")
+                    continue
+                x = int(input("X POSITION OF BOMB (1-10): ")) - 1
+                if not 0 <= x <= 9:
+                    print("DAmn bro")
+                    continue
+            except ValueError:
+                print("DAmn bro")
+                continue
 
-            if not checkhit(bombboard2, yrobo, xrobo):
+            if not checkhit(bombboard2, y, x):
+                print()
+                print("nah bro, bombed already")
+                print()
                 continue
             break
 
-    hit(bombboard2, yrobo, xrobo, reportboard1)
-    potentialshipspace = 0
-    printboard(reportboard1, "OUR FLEET STATUS")
+        hit(bombboard2, y, x, reportboard1)
+        printboard(bombboard2, "BOMBING REPORT")
 
-    # add last ship hit positions
-    if bombboard2[yrobo][xrobo] == 2:
-        lastyhit = yrobo
-        lastxhit = xrobo
+        # checking player's bombing
+        if not checkboard(reportboard1):
+            printboard(reportboard2)
+            print("YOU HAVE WON THE WAR")
+            print()
+            break
 
-    # checking robo's bombing
-    if not checkboard(reportboard1):
-        print()
-        print("YOU HAVE LOST THE WAR")
-        print()
-        printboard(reportboard2)
-        break
-    input()
+        input("ARE YOU WANNA NEXT TURN???")
+        switchuser("PLAYER 1 TURN")
