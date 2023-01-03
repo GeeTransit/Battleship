@@ -113,7 +113,7 @@ def randomboard(reportboard, shipsizes, shipspoints):
 
 def customboard(reportboard, shipsizes, shipspoints):
     for length in shipsizes:
-        printboard(reportboard1, f"WHERE DO YOU WANT YOUR LENGTH {length} SHIP?")
+        printboard(reportboard, f"WHERE DO YOU WANT YOUR LENGTH {length} SHIP?")
         print()
         #taking input
         while True:
@@ -220,15 +220,14 @@ if boardtype == "no":
     customboard(reportboard1, shipsizes, shipspoints1)
 
 printboard(reportboard1, "OUR FLEET STATUS")
+input("READY FOR BATTLE?")
 
 # creating robo board
 if gamemode == 1:
-    input()
     randomboard(reportboard2, shipsizes, shipspoints2)
 
 # creating player 2 board
 if gamemode == 2:
-    input("READY FOR BATTLE?")
     switchuser("PLAYER 2 SETUP")
 
     # creating player's board
@@ -263,6 +262,7 @@ while True:
     if gamemode == 1:
         if shipdown(yrobo, xrobo, bombboard2, shipspoints1):
             print("! OUR SHIP DOWN !")
+    input()
 
     printboard(bombboard1, "WHERE DO YOU WANT TO BOMB?")
 
@@ -352,7 +352,6 @@ while True:
             print("YOU HAVE LOST THE WAR")
             print()
             break
-        input()
 
 
     if gamemode == 2:
@@ -361,6 +360,7 @@ while True:
         printboard(reportboard2, "OUR FLEET STATUS")
         if shipdown(y, x, bombboard1, shipspoints2):
             print("! OUR SHIP DOWN !")
+        input()
 
         printboard(bombboard2, "WHERE DO YOU WANT TO BOMB?")
 
