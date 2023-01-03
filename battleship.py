@@ -1,5 +1,4 @@
 from random import randint, shuffle
-from pprint import pp
 
 def newboard():
     board = []
@@ -16,11 +15,16 @@ def newboard():
 def addship(board, y, x, shiplength, shipdirection):
     # 1 = vertical
     # 0 = horizontal
+    shippoints = []
     for i in range(shiplength):
+        # put all points in variable
         if shipdirection == 1:
             board[y+i][x] = 1
+            shippoints.append([y+i, x])
         if shipdirection == 0:
             board[y][x+i] = 1
+            shippoints.append([y, x+i])
+    return shippoints
 
 def checkship(board, y, x, shiplength, shipdirection):
     # 1 = vertical
@@ -97,17 +101,17 @@ def checkboard(reportboard):
             return True
     return False
 
-def randomboard(reportboard, shipsizes):
-    for shipsize in shipsizes:
+def randomboard(reportboard, shipsizes, shipspoints):
+    for length in shipsizes:
         while True:
             y = randint(0,9)
             x = randint(0,9)
-            shipdirection = randint(0,1)
-            if checkship(reportboard, y, x, shipsize, shipdirection):
+            direction = randint(0,1)
+            if checkship(reportboard, y, x, length, direction):
                 break
-        addship(reportboard, y, x, shipsize, shipdirection)
+        shipspoints.append(addship(reportboard, y, x, length, direction))
 
-def customboard(reportboard, shipsizes):
+def customboard(reportboard, shipsizes, shipspoints):
     for length in shipsizes:
         printboard(reportboard1, f"WHERE DO YOU WANT YOUR LENGTH {length} SHIP?")
         print()
@@ -138,22 +142,23 @@ def customboard(reportboard, shipsizes):
                 continue
             break
         # adding ship
-        addship(reportboard, y, x, length, direction)
+        shipspoints.append(addship(reportboard, y, x, length, direction))
 
 def switchuser(prompt):
     for i in range(50):
         print()
     input(prompt)
 
+def shipdown(y, x, ourbombboard, opshipspoints):
+    for shippoints in opshipspoints:
+        if [y, x] in shippoints:
+            for [y, x] in shippoints:
+                if ourbombboard[y][x] != 2:
+                    return False
+            return True
 '''
-
 todo:
 make last hit diff emoji
-ship down diff icon
-- attach ship parts together
-- check if all parts are down whe ship is hit
-
-multiplayer
 
 make robo smarter!
 - continue using older ship locations
@@ -172,6 +177,15 @@ lastyhit = None
 shipsizes = [2, 3, 3, 4, 5]
 
 potentialshipspace = 0
+
+shipspoints1 = []
+shipspoints2 = []
+
+x = 0
+y = 0
+
+yrobo = 0
+xrobo = 0
 
 # setting gamemode (loner or not)
 while True:
@@ -199,18 +213,18 @@ while True:
 
 # random player board
 if boardtype == "yes":
-    randomboard(reportboard1, shipsizes)
+    randomboard(reportboard1, shipsizes, shipspoints1)
 
 # custom player board
 if boardtype == "no":
-    customboard(reportboard1, shipsizes)
+    customboard(reportboard1, shipsizes, shipspoints1)
 
 printboard(reportboard1, "OUR FLEET STATUS")
 
 # creating robo board
 if gamemode == 1:
     input()
-    randomboard(reportboard2, shipsizes)
+    randomboard(reportboard2, shipsizes, shipspoints2)
 
 # creating player 2 board
 if gamemode == 2:
@@ -227,11 +241,11 @@ if gamemode == 2:
 
     # random player board
     if boardtype == "yes":
-        randomboard(reportboard2, shipsizes)
+        randomboard(reportboard2, shipsizes, shipspoints2)
 
     # player setting ships
     if boardtype == "no":
-        customboard(reportboard2, shipsizes)
+        customboard(reportboard2, shipsizes, shipspoints2)
 
     printboard(reportboard2, "OUR FLEET STATUS")
 
@@ -243,6 +257,13 @@ if gamemode == 2:
 while True:
 
     printboard(reportboard1, "OUR FLEET STATUS")
+    if gamemode == 2:
+        if shipdown(y, x, bombboard2, shipspoints1):
+            print("! OUR SHIP DOWN !")
+    if gamemode == 1:
+        if shipdown(yrobo, xrobo, bombboard2, shipspoints1):
+            print("! OUR SHIP DOWN !")
+
     printboard(bombboard1, "WHERE DO YOU WANT TO BOMB?")
 
     # player bombing
@@ -269,6 +290,9 @@ while True:
 
     hit(bombboard1, y, x, reportboard2)
     printboard(bombboard1, "BOMBING REPORT")
+
+    if shipdown(y, x, bombboard1, shipspoints2):
+        print("! ENEMY SHIP DOWN !")
 
     # checking player's bombing
     if not checkboard(reportboard2):
@@ -311,10 +335,14 @@ while True:
 
         hit(bombboard2, yrobo, xrobo, reportboard1)
         potentialshipspace = 0
-        printboard(reportboard1, "OUR FLEET STATUS")
+
+        # resets lasty and lastx hit if ship down
+        if shipdown(yrobo, xrobo, bombboard2, shipspoints1):
+            lastyhit = None
+            lastxhit = None
 
         # add last ship hit positions
-        if bombboard2[yrobo][xrobo] == 2:
+        elif bombboard2[yrobo][xrobo] == 2:
             lastyhit = yrobo
             lastxhit = xrobo
 
@@ -330,7 +358,10 @@ while True:
     if gamemode == 2:
         switchuser("PLAYER 2 TURN")
 
-        printboard(reportboard1, "OUR FLEET STATUS")
+        printboard(reportboard2, "OUR FLEET STATUS")
+        if shipdown(y, x, bombboard1, shipspoints2):
+            print("! OUR SHIP DOWN !")
+
         printboard(bombboard2, "WHERE DO YOU WANT TO BOMB?")
 
         # player bombing
@@ -357,6 +388,9 @@ while True:
 
         hit(bombboard2, y, x, reportboard1)
         printboard(bombboard2, "BOMBING REPORT")
+
+        if shipdown(y, x, bombboard2, shipspoints1):
+            print("! ENEMY SHIP DOWN !")
 
         # checking player's bombing
         if not checkboard(reportboard1):
