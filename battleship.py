@@ -1,4 +1,4 @@
-from random import randint, shuffle
+from random import randint, shuffle, choice
 
 def newboard():
     board = []
@@ -156,6 +156,39 @@ def shipdown(y, x, ourbombboard, opshipspoints):
                 if ourbombboard[y][x] != 2:
                     return False
             return True
+
+def firstfree(ourbombboard, y, x, dx, dy):
+    # returns [y, x] or raises ValueError if not found
+    while True:
+        y += dy
+        x += dx
+        if not 0 <= y < 10 or not 0 <= x < 10:  # outside board
+            break
+        if ourbombboard[y][x] == 3:  # bombed sea
+            break
+        if ourbombboard[y][x] == 0:  # can hit
+            return [y, x]
+    raise ValueError("no free tile found")
+
+sidedeltas = [
+    # dy, dx
+    [+1, 0],  # down
+    [0, +1],  # right
+    [-1, 0],  # up
+    [0, -1],  # left
+]
+
+def calculatescore(ourbombboard, y, x):
+    # the weights here were reached by trial and error
+    tilescore = 0
+    for dy, dx in sidedeltas:
+        dy += y
+        dx += x
+        if not 0 <= dy < 10 or not 0 <= dx < 10:  # outside board
+            tilescore -= 1
+        elif ourbombboard[dy][dx] == 3:  # bombed sea
+            tilescore -= 2
+    return tilescore
 '''
 todo:
 make last hit diff emoji
@@ -186,6 +219,15 @@ y = 0
 
 yrobo = 0
 xrobo = 0
+
+lastydelta = None
+lastxdelta = None
+
+roboscores = {
+    (y, x): calculatescore(bombboard2, y, x)
+    for y in range(10)
+    for x in range(10)
+}
 
 # setting gamemode (loner or not)
 while True:
@@ -306,8 +348,45 @@ while True:
 
     # robo bombing
     if gamemode == 1:
+
+        # check in same direction
+        if (
+            potentialshipspace == 0
+            and lastyhit is not None
+            and lastydelta is not None
+        ):
+            try:
+                yrobo, xrobo = firstfree(
+                    bombboard2,
+                    lastyhit, lastxhit,
+                    lastydelta, lastxdelta,
+                )
+            except ValueError:
+                pass
+            else:
+                potentialshipspace = 1
+
+        # check in opposite direction
+        if (
+            potentialshipspace == 0
+            and lastyhit is not None
+            and lastydelta is not None
+        ):
+            try:
+                yrobo, xrobo = firstfree(
+                    bombboard2,
+                    lastyhit, lastxhit,
+                    -lastydelta, -lastxdelta,
+                )
+            except ValueError:
+                pass
+            else:
+                potentialshipspace = 1
+                lastydelta = -lastydelta
+                lastxdelta = -lastxdelta
+
         # checking last ship hit position
-        if lastyhit is not None:
+        if lastyhit is not None and potentialshipspace == 0:
             # making a list of spaces around (list it all)
             randposition = [
                 [lastyhit-1, lastxhit],
@@ -321,25 +400,36 @@ while True:
                 if not checkhit(bombboard2, yrobo, xrobo):
                     continue
                 potentialshipspace = 1
+                lastydelta = yrobo - lastyhit
+                lastxdelta = xrobo - lastxhit
                 break
 
         if potentialshipspace == 0:
-            while True:
             # creates new bomb position
-                yrobo = randint(0, 9)
-                xrobo = randint(0, 9)
-
-                if not checkhit(bombboard2, yrobo, xrobo):
-                    continue
-                break
+            maxscore = max(roboscores.values())
+            yrobo, xrobo = choice([
+                yx
+                for yx, score in roboscores.items()
+                if score == maxscore
+            ])
 
         hit(bombboard2, yrobo, xrobo, reportboard1)
         potentialshipspace = 0
+
+        # update scores of surrounding squares
+        del roboscores[(yrobo, xrobo)]
+        for dy, dx in sidedeltas:
+            sy = yrobo + dy
+            sx = xrobo + dx
+            if (sy, sx) in roboscores:
+                roboscores[(sy, sx)] = calculatescore(bombboard2, sy, sx)
 
         # resets lasty and lastx hit if ship down
         if shipdown(yrobo, xrobo, bombboard2, shipspoints1):
             lastyhit = None
             lastxhit = None
+            lastydelta = None
+            lastxdelta = None
 
         # add last ship hit positions
         elif bombboard2[yrobo][xrobo] == 2:
