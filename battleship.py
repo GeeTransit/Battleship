@@ -157,7 +157,7 @@ def shipdown(y, x, ourbombboard, opshipspoints):
                     return False
             return True
 
-def firstfree(ourbombboard, y, x, dx, dy):
+def firstfree(ourbombboard, y, x, dy, dx):
     # returns [y, x] or raises ValueError if not found
     while True:
         y += dy
